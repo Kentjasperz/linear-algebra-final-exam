@@ -72,7 +72,8 @@ display(pd.DataFrame(X_raw, columns=feature_names).describe())
 np.savez('partA_data.npz', X_raw=X_raw, y=y, feature_names=feature_names)
 try:
     from google.colab import drive
-    drive.mount('/content/drive')
+    if not os.path.exists('/content/drive/MyDrive'):
+        drive.mount('/content/drive')
     if os.path.exists('/content/drive/MyDrive'):
         np.savez('/content/drive/MyDrive/partA_data.npz',
                  X_raw=X_raw, y=y, feature_names=feature_names)

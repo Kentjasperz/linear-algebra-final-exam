@@ -21,6 +21,7 @@ The columns of X don't just sit there — together they define a subspace that l
 """
 
 import os
+from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -28,14 +29,19 @@ import matplotlib.pyplot as plt
 np.set_printoptions(precision=4, suppress=True)
 pd.set_option('display.float_format', lambda x: f'{x:.4f}')
 
-try:
-    from google.colab import drive
-    drive.mount('/content/drive')
-except Exception:
-    pass
+search_dirs = [Path.cwd(), Path('/content'), Path('/content/drive/MyDrive')]
+npz_path = next((d / 'partB_data.npz' for d in search_dirs if (d / 'partB_data.npz').exists()), None)
+if npz_path is None:
+    try:
+        from google.colab import drive
+        if not os.path.exists('/content/drive/MyDrive'):
+            drive.mount('/content/drive')
+        if os.path.exists('/content/drive/MyDrive/partB_data.npz'):
+            npz_path = Path('/content/drive/MyDrive/partB_data.npz')
+    except Exception:
+        pass
 
-npz_path = '/content/drive/MyDrive/partB_data.npz' if os.path.exists('/content/drive/MyDrive/partB_data.npz') else 'partB_data.npz'
-data = np.load(npz_path, allow_pickle=True)
+data = np.load(npz_path or 'partB_data.npz', allow_pickle=True)
 X, XtX, y = data['X'], data['XtX'], data['y']
 feature_names = data['feature_names'].tolist()
 print('Loaded X:', X.shape, ' XtX:', XtX.shape)

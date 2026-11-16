@@ -16,6 +16,7 @@ Before you can solve for regression coefficients using matrix inversion, you nee
 """
 
 import os
+from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -23,14 +24,19 @@ import matplotlib.pyplot as plt
 np.set_printoptions(precision=4, suppress=True)
 pd.set_option('display.float_format', lambda x: f'{x:.4f}')
 
-try:
-    from google.colab import drive
-    drive.mount('/content/drive')
-except Exception:
-    pass
+search_dirs = [Path.cwd(), Path('/content'), Path('/content/drive/MyDrive')]
+npz_path = next((d / 'partD_data.npz' for d in search_dirs if (d / 'partD_data.npz').exists()), None)
+if npz_path is None:
+    try:
+        from google.colab import drive
+        if not os.path.exists('/content/drive/MyDrive'):
+            drive.mount('/content/drive')
+        if os.path.exists('/content/drive/MyDrive/partD_data.npz'):
+            npz_path = Path('/content/drive/MyDrive/partD_data.npz')
+    except Exception:
+        pass
 
-npz_path = '/content/drive/MyDrive/partD_data.npz' if os.path.exists('/content/drive/MyDrive/partD_data.npz') else 'partD_data.npz'
-data = np.load(npz_path, allow_pickle=True)
+data = np.load(npz_path or 'partD_data.npz', allow_pickle=True)
 X_train, X_test = data['X_train'], data['X_test']
 y_train, y_test = data['y_train'], data['y_test']
 print('Loaded X_train:', X_train.shape, ' X_test:', X_test.shape)
