@@ -8,6 +8,7 @@ Original file is located at
 """
 
 import os
+from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -21,15 +22,14 @@ except ImportError:
 np.set_printoptions(precision=4, suppress=True)
 pd.set_option('display.float_format', lambda x: f'{x:.4f}')
 
-# Load the dataset (supports Colab /content, Google Drive, and local workspace)
-candidate_paths = [
-    '/content/Student_Performance_Factors.csv',
-    '/content/StudentPerformanceFactors.csv',
-    '/content/drive/MyDrive/Student_Performance_Factors.csv',
-    'Student_Performance_Factors.csv',
-    'StudentPerformanceFactors.csv',
-]
-file_path = next((p for p in candidate_paths if os.path.exists(p)), 'Student_Performance_Factors.csv')
+# Dynamically locate the dataset across local workspace, Colab /content, and Google Drive
+search_dirs = [Path.cwd(), Path('/content'), Path('/content/drive/MyDrive')]
+file_names = ['Student_Performance_Factors.csv', 'StudentPerformanceFactors.csv']
+candidate_paths = [str(d / name) for d in search_dirs for name in file_names]
+file_path = next(
+    (p for p in candidate_paths if os.path.exists(p)),
+    str(next(Path.cwd().rglob('*Student*Performance*.csv'), Path(file_names[0])))
+)
 df = pd.read_csv(file_path)
 feature_names = ["Attendance", "Hours_Studied", "Previous_Scores", "Sleep_Hours"]
 
