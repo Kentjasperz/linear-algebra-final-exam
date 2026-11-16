@@ -22,14 +22,38 @@ except ImportError:
 np.set_printoptions(precision=4, suppress=True)
 pd.set_option('display.float_format', lambda x: f'{x:.4f}')
 
-# Dynamically locate the dataset across local workspace, Colab /content, and Google Drive
+# Dynamically locate or download the dataset (local, Colab /content, Google Drive, or Kaggle)
 search_dirs = [Path.cwd(), Path('/content'), Path('/content/drive/MyDrive')]
 file_names = ['Student_Performance_Factors.csv', 'StudentPerformanceFactors.csv']
-candidate_paths = [str(d / name) for d in search_dirs for name in file_names]
-file_path = next(
-    (p for p in candidate_paths if os.path.exists(p)),
-    str(next(Path.cwd().rglob('*Student*Performance*.csv'), Path(file_names[0])))
-)
+
+def find_dataset():
+    for d in search_dirs:
+        if d.exists():
+            for name in file_names:
+                if (d / name).exists():
+                    return str(d / name)
+            match = next(d.rglob('*Student*Performance*.csv'), None)
+            if match:
+                return str(match)
+    try:
+        import kagglehub
+        dl_dir = Path(kagglehub.dataset_download('lainguyn123/student-performance-factors'))
+        match = next(dl_dir.rglob('*.csv'), None)
+        if match:
+            return str(match)
+    except Exception:
+        pass
+    try:
+        from google.colab import files
+        uploaded = files.upload()
+        if uploaded:
+            return next(iter(uploaded))
+    except Exception:
+        pass
+    return file_names[0]
+
+file_path = find_dataset()
+print(f"Using dataset: {file_path}")
 df = pd.read_csv(file_path)
 feature_names = ["Attendance", "Hours_Studied", "Previous_Scores", "Sleep_Hours"]
 
